@@ -39,8 +39,9 @@ Before running the application, point your custom domain to your Hostinger VPS I
 ### Step 1: Upload / Clone your Project
 SSH into your Hostinger VPS and clone your repository:
 ```bash
-git clone <your-repository-url> mcsc_project
-cd mcsc_project
+git clone https://github.com/muhd-sinan-m/mcsc-hst.git
+cd mcsc-hst/mcsc_project
+
 ```
 
 ### Step 2: Configure Environment Variables for Custom Domain
