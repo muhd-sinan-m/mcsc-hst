@@ -1,0 +1,20 @@
+# Environment & Virtual Env
+venv/
+env/
+ENV/
+.env
+
+# Python compilation / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django dynamic files
+*.sqlite3
+staticfiles/
+media/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
