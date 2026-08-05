@@ -2,9 +2,10 @@
 FROM python:3.11-slim
 
 # Set environment variables
+ARG PORT=8000
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=${PORT}
 
 # Set working directory inside container
 WORKDIR /app
@@ -34,10 +35,10 @@ RUN chmod +x /app/entrypoint.sh \
     && sed -i 's/\r$//' /app/entrypoint.sh
 
 # Expose container port
-EXPOSE 8000
+EXPOSE ${PORT}
 
 # Set entrypoint script
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default startup command running Gunicorn WSGI server
-CMD ["gunicorn", "mcsc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+CMD ["sh", "-c", "exec gunicorn mcsc.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120"]

@@ -10,12 +10,12 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:${PORT:-8000}"
     volumes:
       - static_data:/app/staticfiles
       - media_data:/app/media
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT:-8000}/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
