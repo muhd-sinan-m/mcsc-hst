@@ -1,5 +1,9 @@
+import logging
 from storages.backends.s3boto3 import S3Boto3Storage
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, BotoCoreError
+from django.core.files.storage import FileSystemStorage
+
+logger = logging.getLogger(__name__)
 
 class SupabaseS3Storage(S3Boto3Storage):
     """
@@ -7,6 +11,14 @@ class SupabaseS3Storage(S3Boto3Storage):
     Supabase S3 storage endpoint returns 403 Forbidden instead of 404 Not Found
     for head_object checks when objects do not exist or when accessed via API.
     """
+    def _save(self, name, content):
+        try:
+            return super()._save(name, content)
+        except (ClientError, BotoCoreError) as err:
+            logger.error(f"Supabase S3 upload failed for '{name}': {err}. Falling back to local storage.")
+            local_storage = FileSystemStorage()
+            return local_storage.save(name, content)
+
     def exists(self, name):
         try:
             return super().exists(name)
@@ -15,3 +27,13 @@ class SupabaseS3Storage(S3Boto3Storage):
             if status_code in (403, 404):
                 return False
             raise
+
+    def delete(self, name):
+        try:
+            super().delete(name)
+        except ClientError as err:
+            status_code = err.response.get('ResponseMetadata', {}).get('HTTPStatusCode')
+            if status_code in (403, 404):
+                pass  # Ignore missing objects on remote bucket
+            else:
+                raise

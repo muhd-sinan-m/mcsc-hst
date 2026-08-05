@@ -1,7 +1,9 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http404
+from django.conf import settings
 from django.db.models import Count
 from django.contrib import messages
 from core.ratelimit import ratelimit
@@ -30,7 +32,7 @@ def grievance_portal(request):
             grievance.student = student
             grievance.save()
             messages.success(request, "Your grievance has been submitted successfully.")
-            return redirect('grievance_portal')
+            return redirect('grievance_detail', pk=grievance.pk)
     else:
         form = GrievanceForm()
         
@@ -48,7 +50,11 @@ def grievance_portal(request):
         'unread_notifications_count': unread_notifications_count,
         'has_updates': unread_notifications_count > 0,
     }
-    return render(request, 'grievances/submit.html', context)
+    response = render(request, 'grievances/submit.html', context)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
 
 @login_required
 def grievance_detail(request, pk):
@@ -62,7 +68,7 @@ def grievance_detail(request, pk):
     if request.user == grievance.student:
         Notification.objects.filter(user=request.user, grievance=grievance, is_read=False).update(is_read=True)
         
-    if request.method == 'POST' and (request.user.is_staff or request.user.role != 'admin'):
+    if request.method == 'POST' and (request.user.is_staff or request.user.role == 'admin'):
         reply_text = request.POST.get('reply_text')
         if reply_text:
             GrievanceReply.objects.create(
@@ -84,6 +90,31 @@ def grievance_detail(request, pk):
         'status_choices': Grievance.STATUS_CHOICES,
     }
     return render(request, 'grievances/detail.html', context)
+
+@login_required
+def download_attachment(request, pk):
+    grievance = get_object_or_404(Grievance, pk=pk)
+    if grievance.student != request.user and not request.user.is_staff and request.user.role != 'admin':
+        return HttpResponseForbidden("You are not authorized to access this attachment.")
+    
+    if not grievance.attachment:
+        raise Http404("No attachment associated with this grievance.")
+        
+    # 1. Cloud Storage: Redirect to presigned Supabase S3 URL
+    if getattr(settings, 'USE_SUPABASE_STORAGE', False):
+        return redirect(grievance.attachment.url)
+    # 2. Local Storage Fallback: Stream directly using FileResponse from disk
+    try:
+        file_path = grievance.attachment.path
+        if os.path.exists(file_path):
+            f = open(file_path, 'rb')
+            filename = os.path.basename(file_path)
+            return FileResponse(f, as_attachment=True, filename=filename)
+        else:
+            raise Http404(f"Attachment file '{os.path.basename(file_path)}' was not found on local disk.")
+    except Exception as e:
+        print(f"Error serving local attachment for grievance {pk}: {e}")
+        raise Http404("Attachment file could not be read.")
 
 @staff_member_required
 def admin_dashboard(request):

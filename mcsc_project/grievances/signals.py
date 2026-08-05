@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -29,3 +29,19 @@ def handle_user_deleted(sender, instance, **kwargs):
 
     Grievance.objects.filter(student=instance).delete()
     GrievanceReply.objects.filter(admin=instance).delete()
+
+
+@receiver(pre_delete, sender=Grievance)
+def auto_delete_attachment_on_delete(sender, instance, **kwargs):
+    """
+    Automatically deletes the attachment file from storage (Supabase S3 or Local)
+    when a Grievance record is deleted by an admin or system.
+    """
+    if instance.attachment and instance.attachment.name:
+        try:
+            # Normalize path slashes so S3 keys match perfectly
+            clean_name = instance.attachment.name.replace('\\', '/')
+            instance.attachment.storage.delete(clean_name)
+        except Exception as e:
+            import logging
+            logging.warning(f"Could not delete attachment '{instance.attachment.name}' from storage: {e}")
