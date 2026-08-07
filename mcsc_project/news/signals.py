@@ -1,6 +1,13 @@
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
+from django.core.cache import cache
 from .models import NewsAttachment, NewsPost
+
+@receiver(post_save, sender=NewsPost)
+def invalidate_news_poster_cache(sender, instance, **kwargs):
+    """Evict cached presigned URL when a new poster is saved so the new image appears immediately."""
+    if instance.poster_image:
+        cache.delete(f"supabase_url:{instance.poster_image.name}")
 
 @receiver(pre_delete, sender=NewsAttachment)
 def delete_news_attachment_file(sender, instance, **kwargs):
@@ -23,3 +30,4 @@ def delete_news_post_attachments(sender, instance, **kwargs):
                 attachment.file.delete(save=False)
             except Exception:
                 pass
+
