@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -6,7 +7,9 @@ from django.utils.text import slugify
 class NewsPost(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField(help_text="Full news article content")
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='news_posts')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='news_posts', limit_choices_to={'is_staff': True})
+    event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, related_name='news_posts', help_text="Optional linked event to share its poster image")
+    use_default_poster = models.BooleanField(default=False, verbose_name="Use general MCSC Logo as news poster/cover", help_text="Check to use the official MCSC Logo as the news cover.")
     is_published = models.BooleanField(default=True, db_index=True)
     published_at = models.DateTimeField(default=timezone.now, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +28,27 @@ class NewsPost(models.Model):
             return str(self.id) if self.id else "news"
         return s
 
+    @property
+    def poster_image(self):
+        if self.event and self.event.poster_image:
+            return self.event.poster_image
+        return None
+
+    @property
+    def poster_url(self):
+        if self.event and self.event.poster_url:
+            return self.event.poster_url
+        if self.use_default_poster:
+            from django.conf import settings
+            return f"{settings.MEDIA_URL}general/mcsc_logo.png"
+        for attachment in self.attachments.all():
+            if attachment.file_type == 'image':
+                return attachment.file.url
+            ext = os.path.splitext(attachment.file.name)[1].lower() if attachment.file else ''
+            if ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']:
+                return attachment.file.url
+        return None
+
     def __str__(self):
         return self.title
 
@@ -36,6 +60,28 @@ class NewsAttachment(models.Model):
     news_post = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(upload_to='news_attachments/')
     file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default='document')
+
+    @property
+    def generic_filename(self):
+        ext = os.path.splitext(self.file.name)[1].lower() if self.file else ''
+        if self.file_type == 'image':
+            return f"image{ext}" if ext else "image.jpg"
+        if ext in ['.pdf']:
+            return "report.pdf"
+        elif ext in ['.doc', '.docx']:
+            return "report.docx"
+        elif ext in ['.xls', '.xlsx']:
+            return "report.xlsx"
+        elif ext in ['.zip', '.rar']:
+            return "document.zip"
+        return f"document{ext}" if ext else "document"
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            ext = os.path.splitext(self.file.name)[1].lower()
+            if ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']:
+                self.file_type = 'image'
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Attachment for {self.news_post.title} ({self.file_type})"

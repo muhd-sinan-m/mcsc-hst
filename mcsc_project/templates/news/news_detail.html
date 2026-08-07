@@ -9,7 +9,15 @@
         <!-- Post Content Column -->
         <article class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-sm border border-outline-variant/30">
             <header class="mb-6 pb-6 border-b border-outline-variant/30">
-                <span class="inline-block bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-sm text-label-sm mb-4">Announcement</span>
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="inline-block bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-sm text-label-sm">Announcement</span>
+                    {% if post.event %}
+                    <a href="{% url 'event_detail' post.event.slug %}" class="inline-flex items-center gap-1.5 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-sm text-label-sm font-bold hover:bg-secondary hover:text-on-secondary transition-colors">
+                        <span class="material-symbols-outlined text-[16px]">event</span>
+                        Linked Event: {{ post.event.title }}
+                    </a>
+                    {% endif %}
+                </div>
                 <h1 class="font-display-lg text-3xl md:text-4xl text-primary mb-4">{{ post.title }}</h1>
                 <div class="flex items-center gap-4 text-sm text-on-surface-variant">
                     <span>By <strong>{{ post.author.username }}</strong></span>
@@ -19,7 +27,11 @@
             </header>
             
             <!-- Featured Images / Cover -->
-            {% if post.attachments.all %}
+            {% if post.poster_url %}
+                <div class="mb-8 rounded-xl overflow-hidden shadow-sm max-h-[480px] flex justify-center bg-black/5">
+                    <img src="{{ post.poster_url }}" alt="{{ post.title }}" class="object-contain max-h-[480px]">
+                </div>
+            {% elif post.attachments.all %}
                 <div class="mb-8 space-y-4">
                     {% for attachment in post.attachments.all %}
                         {% if attachment.file_type == 'image' %}
@@ -47,8 +59,8 @@
                         {% for attachment in post.attachments.all %}
                             {% if attachment.file_type == 'document' %}
                             <li class="flex items-center justify-between p-3 bg-surface rounded-lg hover:bg-surface-container transition-colors">
-                                <span class="text-sm font-medium truncate max-w-xs md:max-w-md">{{ attachment.file.name|urlencode }}</span>
-                                <a href="{{ attachment.file.url }}" download class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-nav-button text-xs uppercase tracking-wider hover-lift">
+                                <span class="text-sm font-medium truncate max-w-xs md:max-w-md">{{ attachment.generic_filename }}</span>
+                                <a href="{{ attachment.file.url }}" target="_blank" download="{{ attachment.generic_filename }}" class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-nav-button text-xs uppercase tracking-wider hover-lift">
                                     Download
                                 </a>
                             </li>

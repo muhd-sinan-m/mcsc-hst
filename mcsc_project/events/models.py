@@ -8,6 +8,7 @@ class Event(models.Model):
     event_date = models.DateTimeField(db_index=True, help_text="Date and time of the event")
     venue = models.CharField(max_length=200)
     poster_image = models.ImageField(upload_to='event_posters/', null=True, blank=True)
+    use_default_poster = models.BooleanField(default=False, verbose_name="Use general MCSC Logo as poster", help_text="Check to use the official MCSC Logo as the event poster instead of a custom upload.")
     registration_link = models.URLField(blank=True, null=True, help_text="Link to external registration form if applicable")
     is_published = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -27,8 +28,22 @@ class Event(models.Model):
         return s
 
     @property
+    def poster_url(self):
+        if self.use_default_poster:
+            from django.conf import settings
+            return f"{settings.MEDIA_URL}general/mcsc_logo.png"
+        if self.poster_image:
+            return self.poster_image.url
+        return None
+
+    @property
     def is_upcoming(self):
         return self.event_date >= timezone.now()
+
+    def save(self, *args, **kwargs):
+        if self.use_default_poster:
+            self.poster_image = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.title} on {self.event_date.strftime('%Y-%m-%d')}"
