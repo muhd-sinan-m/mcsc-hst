@@ -487,8 +487,13 @@
                         <!-- Cover Image if uploaded -->
                         <div
                             class="h-32 bg-surface-variant relative overflow-hidden flex items-center justify-center border-b border-outline-variant/30">
-                            <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                                src="{{ event.poster_url }}" alt="{{ event.title }}">
+                            {% if event.use_default_poster or 'mcsc_logo' in event.poster_url %}
+                                <img class="w-full h-full object-contain p-2 bg-white transition-transform duration-500 hover:scale-105"
+                                    src="{{ event.poster_url }}" alt="{{ event.title }}">
+                            {% else %}
+                                <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                                    src="{{ event.poster_url }}" alt="{{ event.title }}">
+                            {% endif %}
                             <!-- Date overlay tag -->
                             <div
                                 class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-center shadow-sm">
