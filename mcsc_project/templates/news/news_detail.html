@@ -31,16 +31,6 @@
                 <div class="mb-8 rounded-xl overflow-hidden shadow-sm max-h-[480px] flex justify-center bg-black/5">
                     <img src="{{ post.poster_url }}" alt="{{ post.title }}" class="object-contain max-h-[480px]">
                 </div>
-            {% elif post.attachments.all %}
-                <div class="mb-8 space-y-4">
-                    {% for attachment in post.attachments.all %}
-                        {% if attachment.file_type == 'image' %}
-                            <div class="rounded-xl overflow-hidden shadow-sm">
-                                <img src="{{ attachment.file.url }}" alt="Attachment" class="w-full h-auto object-cover max-h-[480px]">
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
             {% endif %}
             
             <!-- Article Body -->

@@ -9,6 +9,7 @@ class NewsPost(models.Model):
     content = models.TextField(help_text="Full news article content")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='news_posts', limit_choices_to={'is_staff': True})
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, related_name='news_posts', help_text="Optional linked event to share its poster image")
+    poster_image = models.ImageField(upload_to='news_posters/', null=True, blank=True, help_text="Optional dedicated cover poster image for this news post")
     use_default_poster = models.BooleanField(default=False, verbose_name="Use general MCSC Logo as news poster/cover", help_text="Check to use the official MCSC Logo as the news cover.")
     is_published = models.BooleanField(default=True, db_index=True)
     published_at = models.DateTimeField(default=timezone.now, db_index=True)
@@ -29,25 +30,20 @@ class NewsPost(models.Model):
         return s
 
     @property
-    def poster_image(self):
-        if self.event and self.event.poster_image:
-            return self.event.poster_image
-        return None
-
-    @property
     def poster_url(self):
-        if self.event and self.event.poster_url:
-            return self.event.poster_url
         if self.use_default_poster:
             from django.conf import settings
             return f"{settings.MEDIA_URL}general/mcsc_logo.png"
-        for attachment in self.attachments.all():
-            if attachment.file_type == 'image':
-                return attachment.file.url
-            ext = os.path.splitext(attachment.file.name)[1].lower() if attachment.file else ''
-            if ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']:
-                return attachment.file.url
+        if self.poster_image:
+            return self.poster_image.url
+        if self.event and self.event.poster_url:
+            return self.event.poster_url
         return None
+
+    def save(self, *args, **kwargs):
+        if self.use_default_poster:
+            self.poster_image = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
