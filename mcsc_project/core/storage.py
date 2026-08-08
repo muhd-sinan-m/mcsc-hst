@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 from botocore.exceptions import ClientError, BotoCoreError
 from django.core.files.storage import FileSystemStorage
@@ -6,7 +7,10 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL_CACHE_TTL = 86400  # 24 hours
+# Read the actual URL expiry from settings (the same value Supabase uses to sign URLs)
+_URL_EXPIRY = getattr(settings, 'AWS_QUERYSTRING_EXPIRE', 3600)
+# Cache for only 90% of that window — ensures the cached URL is always valid when returned
+_URL_CACHE_TTL = int(_URL_EXPIRY * 0.9)
 
 class SupabaseS3Storage(S3Boto3Storage):
     """
@@ -14,7 +18,8 @@ class SupabaseS3Storage(S3Boto3Storage):
     Supabase S3 storage endpoint returns 403 Forbidden instead of 404 Not Found
     for head_object checks when objects do not exist or when accessed via API.
 
-    URL caching: presigned URLs are cached for 24 hours per filename key.
+    URL caching: presigned URLs are cached for 90% of AWS_QUERYSTRING_EXPIRE so
+    the cached URL is always refreshed before Supabase's server invalidates it.
     Cache is invalidated on new uploads and deletions to ensure freshness.
     """
 
@@ -24,7 +29,7 @@ class SupabaseS3Storage(S3Boto3Storage):
         if cached_url:
             return cached_url
         url = super().url(name, parameters=parameters, expire=expire, http_method=http_method)
-        cache.set(cache_key, url, SUPABASE_URL_CACHE_TTL)
+        cache.set(cache_key, url, _URL_CACHE_TTL)
         return url
 
     def _save(self, name, content):
