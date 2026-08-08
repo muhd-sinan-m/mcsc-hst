@@ -1,12 +1,30 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.http import Http404
+from django.db.models import Q
 from .models import Event
 
 def events_list(request):
     now = timezone.now()
-    upcoming_events = Event.objects.filter(is_published=True, event_date__gte=now).order_by('event_date').prefetch_related('additional_dates')
-    past_events = Event.objects.filter(is_published=True, event_date__lt=now).order_by('-event_date').prefetch_related('additional_dates')
+    today = now.date()
+    # Upcoming: primary date in future OR any additional date still in future
+    upcoming_events = (
+        Event.objects
+        .filter(is_published=True)
+        .filter(Q(event_date__gte=now) | Q(additional_dates__date__gte=today))
+        .distinct()
+        .order_by('event_date')
+        .prefetch_related('additional_dates')
+    )
+    # Past: primary date passed AND no additional date is still future
+    past_events = (
+        Event.objects
+        .filter(is_published=True, event_date__lt=now)
+        .exclude(additional_dates__date__gte=today)
+        .distinct()
+        .order_by('-event_date')
+        .prefetch_related('additional_dates')
+    )
     
     context = {
         'upcoming_events': upcoming_events,

@@ -11,6 +11,7 @@ class Event(models.Model):
     use_default_poster = models.BooleanField(default=False, verbose_name="Use general MCSC Logo as poster", help_text="Check to use the official MCSC Logo as the event poster instead of a custom upload.")
     registration_link = models.URLField(blank=True, null=True, help_text="Link to external registration form if applicable")
     is_published = models.BooleanField(default=True, db_index=True)
+    is_featured = models.BooleanField(default=False, verbose_name="Featured", help_text="Pin a ⭐ Featured badge on this event card.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,7 +39,11 @@ class Event(models.Model):
 
     @property
     def is_upcoming(self):
-        return self.event_date >= timezone.now()
+        now = timezone.now()
+        # Multi-day events: stay upcoming until ALL additional dates have also passed
+        if self.additional_dates.filter(date__gte=now.date()).exists():
+            return True
+        return self.event_date >= now
 
     def save(self, *args, **kwargs):
         if self.use_default_poster:
