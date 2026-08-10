@@ -7,10 +7,9 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-# Read the actual URL expiry from settings (the same value Supabase uses to sign URLs)
-_URL_EXPIRY = getattr(settings, 'AWS_QUERYSTRING_EXPIRE', 3600)
-# Cache for only 90% of that window — ensures the cached URL is always valid when returned
-_URL_CACHE_TTL = int(_URL_EXPIRY * 0.9)
+# Short-lived URL cache TTL (5 minutes max) so presigned URLs always have fresh timestamps
+# for new visitors while avoiding redundant URL signing on simultaneous requests.
+_URL_CACHE_TTL = 300
 
 class SupabaseS3Storage(S3Boto3Storage):
     """

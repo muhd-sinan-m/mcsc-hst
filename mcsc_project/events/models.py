@@ -30,11 +30,17 @@ class Event(models.Model):
 
     @property
     def poster_url(self):
-        if self.use_default_poster:
-            from django.conf import settings
-            return f"{settings.MEDIA_URL}general/mcsc_logo.png"
         if self.poster_image:
-            return self.poster_image.url
+            try:
+                return self.poster_image.url
+            except Exception:
+                pass
+        if self.use_default_poster:
+            try:
+                from django.conf import settings
+                return f"{settings.STATIC_URL}images/mcsc_logo.png"
+            except Exception:
+                return "/static/images/mcsc_logo.png"
         return None
 
     @property
@@ -46,8 +52,8 @@ class Event(models.Model):
         return self.event_date >= now
 
     def save(self, *args, **kwargs):
-        if self.use_default_poster:
-            self.poster_image = None
+        if self.poster_image:
+            self.use_default_poster = False
         super().save(*args, **kwargs)
 
     def __str__(self):
