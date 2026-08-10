@@ -183,7 +183,7 @@ if USE_SUPABASE_STORAGE and SUPABASE_URL and SUPABASE_ACCESS_KEY_ID and SUPABASE
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = True
-    AWS_QUERYSTRING_EXPIRE = config('AWS_QUERYSTRING_EXPIRE', default=3600, cast=int)
+    AWS_QUERYSTRING_EXPIRE = config('AWS_QUERYSTRING_EXPIRE', default=604800, cast=int)
 else:
     # Local fallback
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'

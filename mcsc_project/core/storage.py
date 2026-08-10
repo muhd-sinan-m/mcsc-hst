@@ -7,9 +7,9 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-# Short-lived URL cache TTL (5 minutes max) so presigned URLs always have fresh timestamps
-# for new visitors while avoiding redundant URL signing on simultaneous requests.
-_URL_CACHE_TTL = 300
+# Stable Django URL cache TTL (24 hours = 86400s) so visitors receive stable URLs
+# that leverage browser caching while S3 presigned signatures stay valid for 7 days.
+_URL_CACHE_TTL = 86400
 
 class SupabaseS3Storage(S3Boto3Storage):
     """
@@ -17,8 +17,8 @@ class SupabaseS3Storage(S3Boto3Storage):
     Supabase S3 storage endpoint returns 403 Forbidden instead of 404 Not Found
     for head_object checks when objects do not exist or when accessed via API.
 
-    URL caching: presigned URLs are cached for 90% of AWS_QUERYSTRING_EXPIRE so
-    the cached URL is always refreshed before Supabase's server invalidates it.
+    URL caching: presigned URLs are cached for 24 hours while AWS_QUERYSTRING_EXPIRE
+    is set to 7 days, allowing browser caching and zero 403 signature expiration errors.
     Cache is invalidated on new uploads and deletions to ensure freshness.
     """
 
