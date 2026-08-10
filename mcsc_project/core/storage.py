@@ -3,41 +3,27 @@ from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 from botocore.exceptions import ClientError, BotoCoreError
 from django.core.files.storage import FileSystemStorage
-from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
-
-# Stable Django URL cache TTL (24 hours = 86400s) so visitors receive stable URLs
-# that leverage browser caching while S3 presigned signatures stay valid for 7 days.
-_URL_CACHE_TTL = 86400
 
 class SupabaseS3Storage(S3Boto3Storage):
     """
     Custom S3Boto3Storage for Supabase S3 API compatibility.
-    Supabase S3 storage endpoint returns 403 Forbidden instead of 404 Not Found
-    for head_object checks when objects do not exist or when accessed via API.
-
-    URL caching: presigned URLs are cached for 24 hours while AWS_QUERYSTRING_EXPIRE
-    is set to 7 days, allowing browser caching and zero 403 signature expiration errors.
-    Cache is invalidated on new uploads and deletions to ensure freshness.
+    Outputs clean, static, permanent public URLs directly from Supabase Storage:
+    f"{SUPABASE_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/{name}"
     """
 
     def url(self, name, parameters=None, expire=None, http_method=None):
-        cache_key = f"supabase_url:{name}"
-        cached_url = cache.get(cache_key)
-        if cached_url:
-            return cached_url
-        url = super().url(name, parameters=parameters, expire=expire, http_method=http_method)
-        cache.set(cache_key, url, _URL_CACHE_TTL)
-        return url
+        supabase_url = getattr(settings, 'SUPABASE_URL', '').rstrip('/')
+        bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', '')
+        if supabase_url and bucket_name:
+            clean_name = name.lstrip('/')
+            return f"{supabase_url}/storage/v1/object/public/{bucket_name}/{clean_name}"
+        return super().url(name, parameters=parameters, expire=expire, http_method=http_method)
 
     def _save(self, name, content):
         try:
-            saved_name = super()._save(name, content)
-            # Evict any old cached URL for this name so the new file appears immediately
-            cache.delete(f"supabase_url:{saved_name}")
-            cache.delete(f"supabase_url:{name}")
-            return saved_name
+            return super()._save(name, content)
         except (ClientError, BotoCoreError) as err:
             logger.error(f"Supabase S3 upload failed for '{name}': {err}. Falling back to local storage.")
             local_storage = FileSystemStorage()
@@ -61,7 +47,4 @@ class SupabaseS3Storage(S3Boto3Storage):
                 pass  # Ignore missing objects on remote bucket
             else:
                 raise
-        finally:
-            # Always purge the cached URL when the file is deleted
-            cache.delete(f"supabase_url:{name}")
 
