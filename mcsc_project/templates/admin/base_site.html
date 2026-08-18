@@ -16,4 +16,11 @@
 
 {% block extrahead %}
 {{ block.super }}
+<script>
+    // Suppress beforeunload alert messages when adding/editing forms or going back in admin
+    window.onbeforeunload = null;
+    window.addEventListener('beforeunload', function (e) {
+        e.stopImmediatePropagation();
+    }, true);
+</script>
 {% endblock %}

@@ -1,16 +1,15 @@
-# Use official lightweight Python 3.11 base image
+# Use official Python 3.11 slim image
 FROM python:3.11-slim
 
-# Set environment variables
-ARG PORT=8000
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=${PORT}
+# Environment variables with default PORT (overridden at runtime by .env)
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies needed for compiling python packages (e.g., psycopg2, Pillow)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -19,26 +18,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Upgrade pip and copy requirements
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
 COPY . /app/
 
-# Create required directories for static and media files
-RUN mkdir -p /app/staticfiles /app/media
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
 
-# Ensure entrypoint script has execution permissions and Unix LF line endings
-RUN chmod +x /app/entrypoint.sh \
-    && sed -i 's/\r$//' /app/entrypoint.sh
-
-# Expose container port
+# Expose port dynamically read from ENV PORT
 EXPOSE ${PORT}
 
-# Set entrypoint script
+# Entrypoint script starts migrations, static collection, and Gunicorn on PORT from .env
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-# Default startup command running Gunicorn WSGI server
-CMD ["sh", "-c", "exec gunicorn mcsc.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120"]

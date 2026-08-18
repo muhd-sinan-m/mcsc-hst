@@ -5,151 +5,419 @@
 
 {% block content %}
 <!-- Main Content Canvas -->
-<main class="flex-grow pt-8 pb-stack-lg px-margin-desktop max-md:px-margin-mobile w-full max-w-container-max mx-auto">
+<main class="flex-grow pb-stack-lg w-full">
 
-    <!-- Page Header -->
-    <header
-        class="mb-stack-lg text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
-        <div>
-            <h1 class="font-display-lg text-display-lg text-primary mb-unit hidden md:block">Campus Events</h1>
-            <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-unit md:hidden">Campus Events
-            </h1>
-            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-                Discover, participate, and engage with the Marian College community through our curated list of upcoming
-                and past events.
-            </p>
-        </div>
-        <!-- Tab Controls -->
-        <div class="flex p-1 bg-surface-variant rounded-full w-full md:w-auto self-center md:self-end">
-            <button
-                class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-lg text-label-lg bg-surface-container-lowest text-primary shadow-sm transition-all"
-                id="tab-upcoming" onclick="switchTab('upcoming')">Upcoming</button>
-            <button
-                class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-all"
-                id="tab-finished" onclick="switchTab('finished')">Finished</button>
-        </div>
-    </header>
+    <!-- ═══════════════════════════════════════════════════════════════════
+         ONAM PRAKAMBANAM — FULL-WIDTH HERO CARD
+    ═══════════════════════════════════════════════════════════════════ -->
+    {% now "Y-m-d" as today_str %}
+    <!-- ── ONAM PRAKAMBANAM SECTION ── -->
+    <section class="w-full bg-surface-container-lowest border-b border-outline-variant/30 {% if today_str > '2026-08-23' %}hidden{% endif %}" id="onam-prakambanam" data-onam-finished="{% if today_str > '2026-08-23' %}true{% else %}false{% endif %}">
+        <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-10">
 
-    <!-- Upcoming Events Section -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter animate-fade-in" id="section-upcoming">
-        {% for event in upcoming_events %}
-        <article
-            class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden hover-lift flex flex-col h-full relative">
-            {% if event.is_featured %}
-            <div
-                class="absolute top-4 left-4 z-10 bg-secondary text-on-secondary px-3 py-1 rounded-full font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-md">
-                <span class="material-symbols-outlined text-[14px]">star</span> Featured
+            {% if today_str > "2026-08-23" %}
+            <!-- Full-Color Finished Status Banner -->
+            <div class="mb-6 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 p-4 rounded-2xl text-slate-950 font-black text-sm sm:text-base flex items-center justify-between shadow-lg border border-amber-300">
+                <span class="flex items-center gap-2">
+                    <span class="text-2xl animate-bounce">🏆</span>
+                    ONAM PRAKAMBANAM 2026 — OFFICIAL CHAMPIONSHIP RESULTS & CONCLUDED
+                </span>
+                <span class="bg-slate-950/15 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider text-slate-950">Concluded</span>
             </div>
             {% endif %}
-            <div class="h-48 bg-surface-variant relative overflow-hidden flex items-center justify-center">
-                {% if event.poster_url %}
-                {% if event.use_default_poster or 'mcsc_logo' in event.poster_url %}
-                <img class="w-full h-full object-contain p-3 bg-white transition-transform duration-500 hover:scale-105"
-                    src="{{ event.poster_url }}" alt="{{ event.title }}" loading="lazy" decoding="async"
-                    onerror="this.onerror=null; this.src='{% static 'images/mcsc_logo.png' %}';">
-                {% else %}
-                <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                    src="{{ event.poster_url }}" alt="{{ event.title }}" loading="lazy" decoding="async"
-                    onerror="this.onerror=null; this.src='{% static 'images/mcsc_logo.png' %}';">
-                {% endif %}
-                {% else %}
-                <!-- Fallback -->
-                <div
-                    class="w-full h-full bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-4xl">event</span>
-                </div>
-                {% endif %}
-            </div>
-            <div class="p-stack-md flex flex-col flex-grow">
-                <div class="flex flex-col gap-1 mb-2">
-                    <div class="flex items-center gap-2 text-primary font-label-sm text-label-sm">
-                        <span class="material-symbols-outlined text-[16px]">calendar_month</span> {{
-                        event.event_date|date:"M d, Y" }}
-                        <span class="material-symbols-outlined text-[16px] ml-2">schedule</span> {{
-                        event.event_date|date:"h:i A" }}
-                    </div>
-                    {% for add_date in event.additional_dates.all %}
-                    <div class="flex items-center gap-2 text-outline font-label-sm text-[11px]">
-                        <span class="material-symbols-outlined text-[14px]">event_repeat</span>
-                        {% if add_date.label %}<span class="font-semibold text-secondary">{{ add_date.label }}:</span>{%
-                        endif %}
-                        {{ add_date.date|date:"M d, Y" }}{% if add_date.time %}, {{ add_date.time|date:"h:i A" }}{%
-                        endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">
-                    <a href="{% url 'event_detail' event.slug %}" class="hover:text-primary transition-colors">{{
-                        event.title }}</a>
-                </h3>
-                <div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm mb-4">
-                    <span class="material-symbols-outlined text-[16px]">location_on</span> {{ event.venue }}
-                </div>
-                <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-stack-md flex-grow">{{
-                    event.description }}</p>
 
-                <a href="{% url 'event_detail' event.slug %}"
-                    class="w-full py-3 border-2 border-primary text-primary rounded-full font-label-lg text-label-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors block text-center">
-                    View Details
-                </a>
+            <!-- Full-Width Onam Logo -->
+            <div class="w-full mb-10" style="max-height: calc(100vh - 120px);">
+                <img
+                    src="{% static 'images/onam 26/onam_logo.webp' %}"
+                    alt="Onam Celebration 2026"
+                    class="w-full h-full object-contain object-top"
+                    style="max-height: calc(100vh - 120px);"
+                >
             </div>
-        </article>
-        {% empty %}
-        <p class="text-on-surface-variant col-span-full text-center py-8">No upcoming events listed.</p>
-        {% endfor %}
-    </section>
 
-    <!-- Finished Events Section -->
-    <section class="hidden" id="section-finished">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-            {% for event in past_events %}
-            <article
-                class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-stack-sm flex flex-col sm:flex-row gap-stack-sm opacity-90 hover:opacity-100 transition-opacity min-w-0 overflow-hidden">
-                <div
-                    class="sm:w-1/3 h-32 sm:h-auto bg-surface-variant rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                <!-- ── Live Scoreboard (Full Width) ── -->
+                <div class="w-full mb-6">
+                    <div class="bg-surface-container border border-outline-variant/30 rounded-2xl overflow-hidden">
+                        <!-- Header -->
+                        <div class="bg-surface-container-high border-b border-outline-variant/30 px-6 py-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings:'FILL' 1;">emoji_events</span>
+                            <h3 class="text-on-surface font-black text-sm uppercase tracking-wider">Live Scoreboard</h3>
+                            <span class="ml-auto text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Points</span>
+                        </div>
+
+                        {% if onam_settings.show_overall_winner %}
+                            {% with winner=departments_ranked.0 %}
+                            {% if winner %}
+                            <!-- 🏆 OVERALL CHAMPION ANNOUNCEMENT BANNER 🏆 -->
+                            <div class="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 p-6 text-slate-900 border-b border-amber-300 shadow-inner flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-4xl sm:text-5xl animate-bounce">🏆</span>
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-widest bg-slate-950/15 px-3 py-1 rounded-full text-slate-950 font-mono">OFFICIAL OVERALL CHAMPION 2026</span>
+                                        <h2 class="text-2xl sm:text-3xl font-black text-slate-950 mt-1 drop-shadow-sm">{{ winner.name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-950/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-950/20 text-center shrink-0">
+                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-800">Total Points</span>
+                                    <span class="text-2xl font-black text-slate-950">{{ winner.points }} PTS</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <!-- Pending Announcement Bar -->
+                            <div class="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 flex items-center justify-between gap-3 text-xs">
+                                <span class="font-bold text-amber-700 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>
+                                    Overall Champion Announcement: <strong class="underline decoration-amber-400">{{ onam_settings.announcement_date|default:"August 21, 2026" }}</strong>
+                                </span>
+                            </div>
+                        {% endif %}
+
+                        {% if departments_ranked %}
+                        <!-- Department rows — horizontal wrap for full-width feel -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 divide-outline-variant/20">
+                            {% for dept in departments_ranked %}
+                            <div class="flex items-center gap-3 px-5 py-4 border-b border-r border-outline-variant/20 hover:bg-surface-container-high transition-colors {% if forloop.counter == 1 and onam_settings.show_overall_winner %}bg-amber-400/15 font-black{% endif %}">
+                                <!-- Rank badge -->
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-base font-black
+                                    {% if forloop.counter == 1 %}bg-amber-400 text-white shadow-sm
+                                    {% elif forloop.counter == 2 %}bg-slate-300 text-slate-700
+                                    {% elif forloop.counter == 3 %}bg-orange-300 text-orange-800
+                                    {% else %}bg-surface-container-high text-on-surface-variant{% endif %}">
+                                    {% if forloop.counter == 1 %}🥇
+                                    {% elif forloop.counter == 2 %}🥈
+                                    {% elif forloop.counter == 3 %}🥉
+                                    {% else %}{{ forloop.counter }}{% endif %}
+                                </div>
+                                <!-- Dept name -->
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-on-surface font-bold text-sm truncate block {% if forloop.counter <= 3 %}text-on-surface{% else %}text-on-surface-variant{% endif %}">
+                                        {{ dept.name }}
+                                    </span>
+                                    {% if forloop.counter == 1 %}
+                                        {% if onam_settings.show_overall_winner %}
+                                            <span class="text-amber-600 text-[10px] font-black uppercase tracking-wider">🏆 CHAMPION</span>
+                                        {% else %}
+                                            <span class="text-amber-500 text-[10px] font-bold uppercase tracking-wider">Leading 🏆</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <!-- Points pill -->
+                                <span class="shrink-0 px-3 py-1 rounded-full text-xs font-black
+                                    {% if forloop.counter == 1 %}bg-secondary text-on-secondary
+                                    {% elif forloop.counter <= 3 %}bg-surface-container-highest text-on-surface
+                                    {% else %}bg-surface-container text-on-surface-variant{% endif %}">
+                                    {{ dept.points }} pts
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center gap-3 py-10 px-6 text-center">
+                            <span class="text-4xl">⏳</span>
+                            <p class="text-on-surface-variant text-sm font-semibold">Games not started yet.</p>
+                            <p class="text-outline text-xs">Scoreboard updates live as results are entered.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ── Championship Games (Full Width, 2 per row) ── -->
+                <div class="w-full">
+                    <div class="bg-surface-container border border-outline-variant/30 rounded-2xl overflow-hidden">
+                        <!-- Header -->
+                        <div class="bg-surface-container-high border-b border-outline-variant/30 px-6 py-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings:'FILL' 1;">sports</span>
+                            <h3 class="text-on-surface font-black text-sm uppercase tracking-wider">Championship Games</h3>
+                            <span class="ml-auto text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">{{ onam_games|length }} Games</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                            {% for game in onam_games %}
+                            <div class="relative rounded-2xl overflow-hidden border {% if game.is_mavelikoppam %}border-secondary/60 col-span-1 sm:col-span-2{% else %}border-white/10{% endif %} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-h-[200px]">
+
+                                <!-- Background image: Supabase upload → static fallback -->
+                                {% if game.image %}
+                                <img src="{{ game.image.url }}" alt="{{ game.name }}"
+                                    class="absolute inset-0 w-full h-full object-cover" style="opacity: 0.55;">
+                                {% elif game.static_bg_image %}
+                                <img src="{% static game.static_bg_image %}" alt="{{ game.name }}"
+                                    class="absolute inset-0 w-full h-full object-cover" style="opacity: 0.55;">
+                                {% endif %}
+
+                                <!-- Dark gradient overlay for white text readability -->
+                                <div class="absolute inset-0 {% if game.is_mavelikoppam %}bg-gradient-to-br from-black/70 via-black/55 to-secondary/40{% else %}bg-gradient-to-br from-black/70 via-black/55 to-primary/30{% endif %}"></div>
+
+                                <!-- Card Content -->
+                                <div class="relative p-5 h-full flex flex-col">
+                                    <!-- Top row: name + badges -->
+                                    <div class="mb-3">
+                                        <h4 class="text-white font-black text-base leading-snug drop-shadow">{{ game.name }}</h4>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            {% if game.is_mavelikoppam %}
+                                            <span class="text-amber-300 text-[10px] font-bold uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded-full">⭐ Mavelikoppam</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Date -->
+                                    <div class="flex items-center gap-1.5 mb-4">
+                                        <span class="material-symbols-outlined text-[14px] text-white/60">calendar_month</span>
+                                        {% if game.scheduled_date %}
+                                        <span class="text-xs font-semibold text-white/80">{{ game.scheduled_date|date:"M d, Y" }}</span>
+                                        {% else %}
+                                        <span class="text-xs text-white/40 italic">Date TBA</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Results -->
+                                    <div class="flex flex-col gap-1.5 mt-auto">
+                                        {% if game.has_any_results %}
+
+                                            {% if game.has_gender_categories %}
+                                            <!-- â”€â”€ Boys Section â”€â”€ -->
+                                            <div class="mb-1">
+                                                <p class="text-[10px] font-black uppercase tracking-widest text-sky-300 mb-1.5">Boys</p>
+                                                {% if game.boys_result_1st %}
+                                                <div class="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-xl px-3 py-1.5 mb-1">
+                                                    <span class="text-sm shrink-0">🥇</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.boys_result_1st.department.name|default:"—" }}</span>
+                                                        {% if game.boys_result_1st.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.boys_result_1st.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-amber-300 text-[11px] font-black">+{{ game.boys_result_1st.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if game.boys_result_2nd %}
+                                                <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-1.5 mb-1">
+                                                    <span class="text-sm shrink-0">🥈</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.boys_result_2nd.department.name|default:"—" }}</span>
+                                                        {% if game.boys_result_2nd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.boys_result_2nd.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.boys_result_2nd.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if game.boys_result_3rd %}
+                                                <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-1.5">
+                                                    <span class="text-sm shrink-0">🥉</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.boys_result_3rd.department.name|default:"—" }}</span>
+                                                        {% if game.boys_result_3rd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.boys_result_3rd.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.boys_result_3rd.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if not game.boys_result_1st and not game.boys_result_2nd and not game.boys_result_3rd %}
+                                                <p class="text-white/40 text-xs italic px-1">Awaitedâ€¦</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="border-t border-white/15 my-1"></div>
+
+                                            <!-- â”€â”€ Girls Section â”€â”€ -->
+                                            <div>
+                                                <p class="text-[10px] font-black uppercase tracking-widest text-pink-300 mb-1.5">Girls</p>
+                                                {% if game.girls_result_1st %}
+                                                <div class="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-xl px-3 py-1.5 mb-1">
+                                                    <span class="text-sm shrink-0">🥇</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.girls_result_1st.department.name|default:"—" }}</span>
+                                                        {% if game.girls_result_1st.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.girls_result_1st.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-amber-300 text-[11px] font-black">+{{ game.girls_result_1st.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if game.girls_result_2nd %}
+                                                <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-1.5 mb-1">
+                                                    <span class="text-sm shrink-0">🥈</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.girls_result_2nd.department.name|default:"—" }}</span>
+                                                        {% if game.girls_result_2nd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.girls_result_2nd.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.girls_result_2nd.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if game.girls_result_3rd %}
+                                                <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-1.5">
+                                                    <span class="text-sm shrink-0">🥉</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-white font-semibold text-xs truncate block">{{ game.girls_result_3rd.department.name|default:"—" }}</span>
+                                                        {% if game.girls_result_3rd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.girls_result_3rd.participant_name }}</span>{% endif %}
+                                                    </div>
+                                                    <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.girls_result_3rd.points_value }}pts</span>
+                                                </div>
+                                                {% endif %}
+                                                {% if not game.girls_result_1st and not game.girls_result_2nd and not game.girls_result_3rd %}
+                                                <p class="text-white/40 text-xs italic px-1">Awaitedâ€¦</p>
+                                                {% endif %}
+                                            </div>
+
+                                            {% else %}
+                                            <!-- â”€â”€ Open results â”€â”€ -->
+                                            {% if game.result_1st %}
+                                            <div class="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-xl px-3 py-2">
+                                                <span class="text-sm shrink-0">🥇</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <span class="text-white font-semibold text-xs truncate block">{{ game.result_1st.department.name|default:"—" }}</span>
+                                                    {% if game.result_1st.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.result_1st.participant_name }}</span>{% endif %}
+                                                </div>
+                                                <span class="shrink-0 text-amber-300 text-[11px] font-black">+{{ game.result_1st.points_value }}pts</span>
+                                            </div>
+                                            {% endif %}
+                                            {% if game.result_2nd %}
+                                            <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-2">
+                                                <span class="text-sm shrink-0">🥈</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <span class="text-white font-semibold text-xs truncate block">{{ game.result_2nd.department.name|default:"—" }}</span>
+                                                    {% if game.result_2nd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.result_2nd.participant_name }}</span>{% endif %}
+                                                </div>
+                                                <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.result_2nd.points_value }}pts</span>
+                                            </div>
+                                            {% endif %}
+                                            {% if game.result_3rd %}
+                                            <div class="flex items-center gap-2 bg-black/25 backdrop-blur-sm rounded-xl px-3 py-2">
+                                                <span class="text-sm shrink-0">🥉</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <span class="text-white font-semibold text-xs truncate block">{{ game.result_3rd.department.name|default:"—" }}</span>
+                                                    {% if game.result_3rd.participant_name %}<span class="text-white/60 text-[10px] truncate block">{{ game.result_3rd.participant_name }}</span>{% endif %}
+                                                </div>
+                                                <span class="shrink-0 text-white/70 text-[11px] font-black">+{{ game.result_3rd.points_value }}pts</span>
+                                            </div>
+                                            {% endif %}
+                                            {% endif %}
+
+                                        {% else %}
+                                        <div class="flex items-center gap-1.5 text-white/40 text-xs italic py-1">
+                                            <span class="material-symbols-outlined text-[14px]">hourglass_empty</span>
+                                            Results awaitedâ€¦
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-span-2 p-8 text-center text-on-surface-variant text-sm">No games configured.</div>
+                            {% endfor %}
+
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         STANDARD EVENTS SECTION
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div class="pt-8 pb-stack-lg px-margin-desktop max-md:px-margin-mobile w-full max-w-container-max mx-auto">
+
+        <!-- Page Header -->
+        <header class="mb-stack-lg text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+            <div>
+                <h1 class="font-display-lg text-display-lg text-primary mb-unit hidden md:block">Campus Events</h1>
+                <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-unit md:hidden">Campus Events</h1>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    Discover, participate, and engage with the Marian College community through our curated list of upcoming and past events.
+                </p>
+            </div>
+            <!-- Tab Controls -->
+            <div class="flex p-1 bg-surface-variant rounded-full w-full md:w-auto self-center md:self-end">
+                <button class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-lg text-label-lg bg-surface-container-lowest text-primary shadow-sm transition-all" id="tab-upcoming" onclick="switchTab('upcoming')">Upcoming</button>
+                <button class="flex-1 md:flex-none px-6 py-2 rounded-full font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-all" id="tab-finished" onclick="switchTab('finished')">Finished</button>
+            </div>
+        </header>
+
+        <!-- Upcoming Events Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter animate-fade-in" id="section-upcoming">
+            {% for event in upcoming_events %}
+            <article class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden hover-lift flex flex-col h-full relative">
+            {% if event.is_featured %}
+                <div class="absolute top-4 left-4 z-10 bg-secondary text-on-secondary px-3 py-1 rounded-full font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-md">
+                    <span class="material-symbols-outlined text-[14px]" style="font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 20;">star</span> Featured
+                </div>
+            {% endif %}
+                <div class="h-48 bg-surface-variant relative overflow-hidden flex items-center justify-center">
                     {% if event.poster_url %}
-                    {% if event.use_default_poster or 'mcsc_logo' in event.poster_url %}
-                    <img class="w-full h-full object-contain p-2 bg-white" src="{{ event.poster_url }}"
-                        alt="{{ event.title }}" loading="lazy" decoding="async"
-                        onerror="this.onerror=null; this.src='{% static 'images/mcsc_logo.png' %}';">
+                        <img class="w-full h-full {% if event.use_default_poster %}object-contain p-3 bg-white{% else %}object-cover{% endif %} transition-transform duration-500 hover:scale-105" src="{{ event.poster_url }}" alt="{{ event.title }}" loading="lazy" decoding="async">
                     {% else %}
-                    <img class="w-full h-full object-cover grayscale" src="{{ event.poster_url }}"
-                        alt="{{ event.title }}" loading="lazy" decoding="async"
-                        onerror="this.onerror=null; this.src='{% static 'images/mcsc_logo.png' %}';">
-                    {% endif %}
-                    {% else %}
-                    <div class="w-full h-full bg-surface-dim flex items-center justify-center text-outline">
-                        <span class="material-symbols-outlined text-3xl">task_alt</span>
-                    </div>
+                        <div class="w-full h-full bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-4xl">event</span>
+                        </div>
                     {% endif %}
                 </div>
-                <div class="flex flex-col justify-center flex-grow p-2 min-w-0 overflow-hidden">
-                    <div
-                        class="inline-flex items-center px-2 py-1 bg-surface-variant text-on-surface-variant rounded font-label-sm text-label-sm w-max mb-2">
-                        Completed
+                <div class="p-stack-md flex flex-col flex-grow">
+                    <div class="flex flex-col gap-1 mb-2">
+                        <div class="flex items-center gap-2 text-primary font-label-sm text-label-sm">
+                            <span class="material-symbols-outlined text-[16px]">calendar_month</span> {{ event.event_date|date:"M d, Y" }}
+                            <span class="material-symbols-outlined text-[16px] ml-2">schedule</span> {{ event.event_date|date:"h:i A" }}
+                        </div>
+                        {% for add_date in event.additional_dates.all %}
+                            <div class="flex items-center gap-2 text-outline font-label-sm text-[11px]">
+                                <span class="material-symbols-outlined text-[14px]">event_repeat</span>
+                                {% if add_date.label %}<span class="font-semibold text-secondary">{{ add_date.label }}:</span>{% endif %}
+                                {{ add_date.date|date:"M d, Y" }}{% if add_date.time %}, {{ add_date.time|date:"h:i A" }}{% endif %}
+                            </div>
+                        {% endfor %}
                     </div>
-                    <h4 class="font-headline-md text-headline-md text-on-surface mb-1 truncate">
-                        <a href="{% url 'event_detail' event.slug %}" class="hover:text-primary transition-colors">{{
-                            event.title }}</a>
-                    </h4>
-                    <div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm mb-2">
-                        <span class="material-symbols-outlined text-[14px]">calendar_month</span> {{
-                        event.event_date|date:"M d, Y" }}
+                    <h3 class="font-headline-md text-headline-md text-on-surface mb-2">
+                        <a href="{% url 'event_detail' event.slug %}" class="hover:text-primary transition-colors">{{ event.title }}</a>
+                    </h3>
+                    <div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm mb-4">
+                        <span class="material-symbols-outlined text-[16px]">location_on</span> {{ event.venue }}
                     </div>
-                    <p
-                        class="font-body-sm text-body-md text-on-surface-variant line-clamp-2 break-words overflow-hidden">
-                        {{ event.description }}</p>
-                    <a class="mt-2 font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1"
-                        href="{% url 'event_detail' event.slug %}">
-                        Read Report <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-stack-md flex-grow">{{ event.description }}</p>
+                    <a href="{% url 'event_detail' event.slug %}" class="w-full py-3 border-2 border-primary text-primary rounded-full font-label-lg text-label-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors block text-center">
+                        View Details
                     </a>
                 </div>
             </article>
             {% empty %}
-            <p class="text-on-surface-variant col-span-full text-center py-8">No completed events recorded.</p>
+                <p class="text-on-surface-variant col-span-full text-center py-8">No upcoming events listed.</p>
             {% endfor %}
-        </div>
-    </section>
+        </section>
+
+        <!-- Finished Events Section -->
+        <section class="hidden" id="section-finished">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                {% for event in past_events %}
+                <article class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-stack-sm flex flex-col sm:flex-row gap-stack-sm opacity-90 hover:opacity-100 transition-opacity min-w-0 overflow-hidden">
+                    <div class="sm:w-1/3 h-32 sm:h-auto bg-surface-variant rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                        {% if event.poster_url %}
+                            <img class="w-full h-full {% if event.use_default_poster %}object-contain p-2 bg-white{% else %}object-cover{% endif %} grayscale" src="{{ event.poster_url }}" alt="{{ event.title }}" loading="lazy" decoding="async">
+                        {% else %}
+                            <div class="w-full h-full bg-surface-dim flex items-center justify-center text-outline">
+                                <span class="material-symbols-outlined text-3xl">task_alt</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col justify-center flex-grow p-2 min-w-0 overflow-hidden">
+                        <div class="inline-flex items-center px-2 py-1 bg-surface-variant text-on-surface-variant rounded font-label-sm text-label-sm w-max mb-2">
+                            Completed
+                        </div>
+                        <h4 class="font-headline-md text-headline-md text-on-surface mb-1 truncate">
+                            <a href="{% url 'event_detail' event.slug %}" class="hover:text-primary transition-colors">{{ event.title }}</a>
+                        </h4>
+                        <div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm mb-2">
+                            <span class="material-symbols-outlined text-[14px]">calendar_month</span> {{ event.event_date|date:"M d, Y" }}
+                        </div>
+                        <p class="font-body-sm text-body-md text-on-surface-variant line-clamp-2 break-words overflow-hidden">{{ event.description }}</p>
+                        <a class="mt-2 font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1" href="{% url 'event_detail' event.slug %}">
+                            Read Report <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </a>
+                    </div>
+                </article>
+                {% empty %}
+                    <p class="text-on-surface-variant col-span-full text-center py-8">No completed events recorded.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
 
 </main>
 {% endblock %}
@@ -161,29 +429,52 @@
         const finBtn = document.getElementById('tab-finished');
         const upcSec = document.getElementById('section-upcoming');
         const finSec = document.getElementById('section-finished');
+        const onamSec = document.getElementById('onam-prakambanam');
+        const isOnamFinished = onamSec && onamSec.getAttribute('data-onam-finished') === 'true';
 
         if (tabId === 'upcoming') {
             upcBtn.classList.replace('text-on-surface-variant', 'text-primary');
             upcBtn.classList.add('bg-surface-container-lowest', 'shadow-sm');
-
             finBtn.classList.replace('text-primary', 'text-on-surface-variant');
             finBtn.classList.remove('bg-surface-container-lowest', 'shadow-sm');
-
             upcSec.classList.remove('hidden');
             upcSec.classList.add('grid');
             finSec.classList.add('hidden');
-
+            if (onamSec) {
+                if (isOnamFinished) {
+                    onamSec.classList.add('hidden');
+                } else {
+                    onamSec.classList.remove('hidden');
+                }
+            }
         } else {
             finBtn.classList.replace('text-on-surface-variant', 'text-primary');
             finBtn.classList.add('bg-surface-container-lowest', 'shadow-sm');
-
             upcBtn.classList.replace('text-primary', 'text-on-surface-variant');
             upcBtn.classList.remove('bg-surface-container-lowest', 'shadow-sm');
-
             finSec.classList.remove('hidden');
             upcSec.classList.add('hidden');
             upcSec.classList.remove('grid');
+            if (onamSec) {
+                if (isOnamFinished) {
+                    onamSec.classList.remove('hidden');
+                } else {
+                    onamSec.classList.add('hidden');
+                }
+            }
         }
     }
+
+    // Auto-select Finished tab if URL contains #onam-prakambanam or #finished and Onam is finished
+    window.addEventListener('DOMContentLoaded', function() {
+        const onamSec = document.getElementById('onam-prakambanam');
+        const isOnamFinished = onamSec && onamSec.getAttribute('data-onam-finished') === 'true';
+        if (isOnamFinished) {
+            if (window.location.hash === '#onam-prakambanam' || window.location.hash === '#finished') {
+                switchTab('finished');
+            }
+        }
+    });
 </script>
 {% endblock %}
+

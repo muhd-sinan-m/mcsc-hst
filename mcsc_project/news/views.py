@@ -10,8 +10,29 @@ def news_list(request):
     news_posts = NewsPost.objects.filter(is_published=True).order_by('-published_at')[:9]
     total_count = NewsPost.objects.filter(is_published=True).count()
     
-    upcoming_events = Event.objects.filter(is_published=True, event_date__gte=now).order_by('event_date')[:3]
-    past_events = Event.objects.filter(is_published=True, event_date__lt=now).order_by('-event_date')[:3]
+    today = now.date()
+    from django.db import models as db_models
+
+    upcoming_events = (
+        Event.objects.filter(is_published=True)
+        .filter(
+            db_models.Q(event_date__gte=now) |
+            db_models.Q(additional_dates__date__gte=today)
+        )
+        .distinct()
+        .order_by('event_date')
+        .prefetch_related('additional_dates')[:3]
+    )
+    past_events = (
+        Event.objects.filter(is_published=True)
+        .exclude(
+            db_models.Q(event_date__gte=now) |
+            db_models.Q(additional_dates__date__gte=today)
+        )
+        .distinct()
+        .order_by('-event_date')
+        .prefetch_related('additional_dates')[:3]
+    )
     
     context = {
         'news_posts': news_posts,

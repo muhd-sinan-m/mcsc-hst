@@ -9,7 +9,7 @@
             e.stopImmediatePropagation();
         }, true);
 
-        // Remove window.onbeforeunload set by Django changeform.js
+        // Remove window.onbeforeunload set by changeform.js
         if (typeof (django) !== 'undefined' && django.jQuery) {
             django.jQuery(window).off('beforeunload');
         }

@@ -2,16 +2,18 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
 
+DEFAULT_POSTER_PATH = 'general/mcsc_logo.png'
+
 class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     event_date = models.DateTimeField(db_index=True, help_text="Date and time of the event")
     venue = models.CharField(max_length=200)
-    poster_image = models.ImageField(upload_to='event_posters/', null=True, blank=True)
-    use_default_poster = models.BooleanField(default=False, verbose_name="Use general MCSC Logo as poster", help_text="Check to use the official MCSC Logo as the event poster instead of a custom upload.")
+    poster_image = models.ImageField(upload_to='event_posters/', null=True, blank=True, help_text="Upload custom poster image")
+    use_default_poster = models.BooleanField(default=False, help_text="Use general MCSC Logo as poster (instead of custom poster image)")
     registration_link = models.URLField(blank=True, null=True, help_text="Link to external registration form if applicable")
     is_published = models.BooleanField(default=True, db_index=True)
-    is_featured = models.BooleanField(default=False, verbose_name="Featured", help_text="Pin a ⭐ Featured badge on this event card.")
+    is_featured = models.BooleanField(default=False, db_index=True, help_text="Mark as featured — shows a 'Featured' badge on the event card")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -21,6 +23,7 @@ class Event(models.Model):
             models.Index(fields=['is_published', 'event_date']),
         ]
 
+    # Title dynamically generated as URL slug
     @property
     def slug(self):
         s = slugify(self.title, allow_unicode=True)
@@ -45,11 +48,19 @@ class Event(models.Model):
 
     @property
     def is_upcoming(self):
+        """Returns True if the event hasn't fully finished yet.
+        For multi-day events, stays True until the last additional date has passed.
+        """
         now = timezone.now()
-        # Multi-day events: stay upcoming until ALL additional dates have also passed
+        # Check if any additional date is still in the future or today
         if self.additional_dates.filter(date__gte=now.date()).exists():
             return True
         return self.event_date >= now
+
+    def clean(self):
+        super().clean()
+        if self.poster_image:
+            self.use_default_poster = False
 
     def save(self, *args, **kwargs):
         if self.poster_image:
@@ -59,6 +70,7 @@ class Event(models.Model):
     def __str__(self):
         return f"{self.title} on {self.event_date.strftime('%Y-%m-%d')}"
 
+# NEW: Optional Multiple Dates for Events
 class EventDate(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='additional_dates')
     date = models.DateField(help_text="Additional event date")
@@ -73,3 +85,4 @@ class EventDate(models.Model):
         if self.label:
             return f"{self.label}: {self.date.strftime('%Y-%m-%d')}{time_str}"
         return f"{self.date.strftime('%Y-%m-%d')}{time_str}"
+

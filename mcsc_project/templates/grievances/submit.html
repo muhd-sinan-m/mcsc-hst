@@ -1,6 +1,6 @@
-{% extends "core/base.html" %}
+﻿{% extends "core/base.html" %}
 
-{% block title %}Grievance Desk | MCSC{% endblock %}
+{% block title %}Suggestion Box | MCSC{% endblock %}
 
 {% block content %}
 <!-- Main Content Canvas -->
@@ -11,20 +11,20 @@
         <div>
             <h1 class="font-display-lg text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary flex items-center gap-3">
                 <span class="material-symbols-outlined text-secondary text-3xl sm:text-4xl">gavel</span>
-                Grievance Desk
+                Suggestion Box
             </h1>
             <p class="font-body-md text-sm sm:text-base text-on-surface-variant mt-1">
                 Raise your concerns directly to the Students Council for swift resolution and tracking.
             </p>
         </div>
 
-        <!-- "My Grievances" Action Button with Notification Dot -->
+        <!-- "My Suggestions" Action Button with Notification Dot -->
         <div class="flex items-center gap-3 shrink-0">
             <button id="open-drawer-btn" onclick="toggleGrievancesDrawer()"
                 class="relative inline-flex items-center gap-2.5 bg-surface-container-lowest border-2 border-primary/20 hover:border-primary text-primary font-bold px-5 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-md group">
                 
                 <span class="material-symbols-outlined text-secondary group-hover:text-white transition-colors">folder_open</span>
-                <span class="font-display text-sm font-bold">My Grievances</span>
+                <span class="font-display text-sm font-bold">My Suggestions</span>
                 
                 <!-- Count Pill -->
                 <span class="bg-primary/10 group-hover:bg-white/20 text-primary group-hover:text-white text-xs font-extrabold px-2 py-0.5 rounded-full transition-colors">
@@ -51,7 +51,7 @@
             </span>
             <div>
                 <p class="font-bold text-xs sm:text-sm text-primary">
-                    Update on Ticket #GRV-{{ latest_notification.grievance.created_at|date:"Y" }}-{{ latest_notification.grievance.pk }}
+                    Update on Ticket #SUG-{{ latest_notification.grievance.created_at|date:"Y" }}-{{ latest_notification.grievance.pk }}
                 </p>
                 <p class="text-xs text-on-surface-variant mt-0.5">
                     {% if latest_notification.type == 'reply_posted' %}
@@ -63,7 +63,7 @@
             </div>
         </div>
         <button onclick="toggleGrievancesDrawer()" class="text-xs font-bold text-primary hover:text-secondary underline underline-offset-4 shrink-0 sm:ml-auto">
-            View Ticket →
+            View Ticket â†’
         </button>
     </div>
     {% endif %}
@@ -79,7 +79,7 @@
                 <div>
                     <h2 class="font-display-lg text-xl sm:text-2xl font-bold text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined text-secondary">edit_document</span>
-                        Submit a New Grievance
+                        Submit a New Suggestion
                     </h2>
                     <p class="text-xs sm:text-sm text-on-surface-variant mt-1">
                         Fill out the details below. All submissions are confidentially processed by the executive team.
@@ -139,26 +139,35 @@
                         {% endif %}
                     </div>
 
-                    <!-- Submit Button & Animated Progress Tracker Card -->
+                    <!-- Submit Button (Full Width) -->
                     <div class="md:col-span-2 pt-2">
-                        <button id="submit-btn" class="w-full bg-gradient-to-r from-secondary to-amber-500 text-on-secondary font-bold text-sm sm:text-base py-3.5 rounded-full hover:scale-[1.005] active:scale-95 transition-all shadow-lg shadow-amber-500/20 flex justify-center items-center gap-2" type="submit">
-                            <span id="submit-btn-text">Submit Grievance</span>
-                            <span id="submit-btn-icon" class="material-symbols-outlined text-[20px]">send</span>
+                        <button id="submit-grievance-btn" class="w-full bg-gradient-to-r from-secondary to-amber-500 text-on-secondary font-bold text-sm sm:text-base py-3.5 rounded-full hover:scale-[1.005] active:scale-95 transition-all shadow-lg shadow-amber-500/20 flex justify-center items-center gap-2" type="submit">
+                            <span>Submit Suggestion</span>
+                            <span class="material-symbols-outlined text-[20px]">send</span>
                         </button>
+                    </div>
 
-                        <!-- Animated Progress Tracker Card -->
-                        <div id="progress-card" class="hidden mt-4 p-4 bg-surface-container-low border border-primary/20 rounded-2xl shadow-sm transition-all duration-300">
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-xl animate-spin">progress_activity</span>
-                                    <span id="progress-status" class="text-xs sm:text-sm font-semibold text-on-surface">Encrypting and saving grievance details...</span>
-                                </div>
-                                <span id="progress-percentage" class="text-xs font-mono font-bold text-primary">0%</span>
+                    <!-- Submission Progress Tracker Card (Hidden by default, shown on submit) -->
+                    <div id="submitting-tracker" class="hidden md:col-span-2 mt-2 p-4 rounded-2xl bg-surface-container-low border border-primary/20 shadow-md">
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0"></span>
+                                <span id="tracker-status-text" class="text-xs sm:text-sm font-bold text-primary">
+                                    Submitting your suggestion...
+                                </span>
                             </div>
-                            <div class="w-full h-2 bg-outline-variant/30 rounded-full overflow-hidden">
-                                <div id="progress-bar" class="h-full bg-gradient-to-r from-primary via-secondary to-amber-500 rounded-full transition-all duration-300 w-0"></div>
-                            </div>
+                            <span id="tracker-percentage" class="text-xs font-mono font-extrabold text-secondary">0%</span>
                         </div>
+
+                        <!-- Animated Progress Bar Track -->
+                        <div class="w-full bg-outline-variant/30 rounded-full h-2 overflow-hidden relative">
+                            <div id="tracker-progress-bar" class="h-full bg-gradient-to-r from-primary via-secondary to-amber-500 rounded-full w-0 transition-all duration-300 ease-out"></div>
+                        </div>
+
+                        <p class="text-[11px] text-on-surface-variant/70 mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[13px] text-amber-500">lock</span>
+                            Your details and attachments are securely processed. Please stay on this page.
+                        </p>
                     </div>
                 </div>
                 
@@ -170,7 +179,7 @@
     </div>
 </main>
 
-<!-- Slide-Over Drawer for "My Grievances" -->
+<!-- Slide-Over Drawer for "My Suggestions" -->
 <div id="grievances-drawer-overlay" onclick="toggleGrievancesDrawer()"
     class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
@@ -184,7 +193,7 @@
                 <span class="material-symbols-outlined">folder_open</span>
             </div>
             <div>
-                <h3 class="font-display-lg text-lg font-bold text-primary">My Submitted Grievances</h3>
+                <h3 class="font-display-lg text-lg font-bold text-primary">My Submitted Suggestions</h3>
                 <p class="text-xs text-on-surface-variant">Total {{ total_submitted }} ticket{% if total_submitted != 1 %}s{% endif %}</p>
             </div>
         </div>
@@ -203,7 +212,7 @@
             <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                        #GRV-{{ grv.created_at|date:"Y" }}-{{ grv.pk }}
+                        #SUG-{{ grv.created_at|date:"Y" }}-{{ grv.pk }}
                     </span>
                     <span class="text-[10px] font-bold uppercase tracking-wider bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full">
                         {{ grv.get_category_display }}
@@ -247,8 +256,8 @@
         {% empty %}
         <div class="text-center py-12 px-4 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant">
             <span class="material-symbols-outlined text-4xl text-outline mb-2">folder_off</span>
-            <p class="font-bold text-sm text-on-surface">No Grievances Found</p>
-            <p class="text-xs text-on-surface-variant mt-1">You haven't submitted any grievance tickets yet.</p>
+            <p class="font-bold text-sm text-on-surface">No Suggestions Found</p>
+            <p class="text-xs text-on-surface-variant mt-1">You haven't submitted any suggestion tickets yet.</p>
         </div>
         {% endfor %}
     </div>
@@ -293,86 +302,82 @@
         });
     }
 
-    // Unsaved form confirmation alert & navigation helper
+    // Alert user if navigating away while typing form
     let isFormDirty = false;
-    let isSubmitting = false;
+    let isFormSubmitting = false;
 
-    const grievanceForm = document.querySelector('form[method="POST"]');
+    const grievanceForm = document.querySelector('form');
     if (grievanceForm) {
-        const formInputs = grievanceForm.querySelectorAll('input, select, textarea');
-        formInputs.forEach(input => {
-            input.addEventListener('input', () => { isFormDirty = true; });
-            input.addEventListener('change', () => { isFormDirty = true; });
-        });
-
+        grievanceForm.addEventListener('input', () => { isFormDirty = true; });
+        grievanceForm.addEventListener('change', () => { isFormDirty = true; });
+        
         grievanceForm.addEventListener('submit', (e) => {
-            if (isSubmitting) {
-                e.preventDefault();
-                return;
-            }
-            isSubmitting = true;
+            isFormSubmitting = true;
 
-            const submitBtn = document.getElementById('submit-btn');
-            const submitBtnText = document.getElementById('submit-btn-text');
-            const submitBtnIcon = document.getElementById('submit-btn-icon');
-            const progressCard = document.getElementById('progress-card');
-            const progressStatus = document.getElementById('progress-status');
-            const progressPercentage = document.getElementById('progress-percentage');
-            const progressBar = document.getElementById('progress-bar');
-            const hasAttachment = fileInput && fileInput.files && fileInput.files.length > 0;
-
+            const submitBtn = document.getElementById('submit-grievance-btn');
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-                if (submitBtnText) submitBtnText.textContent = 'Submitting Grievance...';
-                if (submitBtnIcon) {
-                    submitBtnIcon.textContent = 'progress_activity';
-                    submitBtnIcon.classList.add('animate-spin');
-                }
+                submitBtn.innerHTML = `
+                    <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Submitting Suggestion...</span>
+                `;
             }
 
-            if (progressCard) {
-                progressCard.classList.remove('hidden');
+            const tracker = document.getElementById('submitting-tracker');
+            const progressBar = document.getElementById('tracker-progress-bar');
+            const percentage = document.getElementById('tracker-percentage');
+            const statusText = document.getElementById('tracker-status-text');
+
+            if (tracker) {
+                tracker.classList.remove('hidden');
                 
-                let percent = 15;
-                if (progressBar) progressBar.style.width = percent + '%';
-                if (progressPercentage) progressPercentage.textContent = percent + '%';
+                let progress = 12;
+                if (progressBar) progressBar.style.width = progress + '%';
+                if (percentage) percentage.textContent = progress + '%';
 
-                setTimeout(() => {
-                    percent = hasAttachment ? 50 : 70;
-                    if (progressBar) progressBar.style.width = percent + '%';
-                    if (progressPercentage) progressPercentage.textContent = percent + '%';
-                    if (hasAttachment && progressStatus) {
-                        progressStatus.textContent = 'Uploading attachment securely to cloud storage...';
-                    } else if (progressStatus) {
-                        progressStatus.textContent = 'Finalizing ticket registration...';
-                    }
-                }, 400);
+                const hasAttachment = fileInput && fileInput.files && fileInput.files.length > 0;
+                
+                const interval = setInterval(() => {
+                    if (progress < 92) {
+                        progress += Math.floor(Math.random() * 12) + 6;
+                        if (progress > 92) progress = 92;
 
-                setTimeout(() => {
-                    percent = 95;
-                    if (progressBar) progressBar.style.width = percent + '%';
-                    if (progressPercentage) progressPercentage.textContent = percent + '%';
-                    if (progressStatus) {
-                        progressStatus.textContent = 'Finalizing ticket registration...';
+                        if (progressBar) progressBar.style.width = progress + '%';
+                        if (percentage) percentage.textContent = progress + '%';
+
+                        if (statusText) {
+                            if (progress > 30 && progress <= 65) {
+                                statusText.textContent = hasAttachment 
+                                    ? 'Uploading attachment securely to cloud storage...' 
+                                    : 'Encrypting and saving suggestion details...';
+                            } else if (progress > 65) {
+                                statusText.textContent = 'Finalizing ticket registration...';
+                            }
+                        }
+                    } else {
+                        clearInterval(interval);
                     }
-                }, 900);
+                }, 250);
             }
         });
     }
 
     function navigateToTicket(url) {
-        if (isFormDirty && !isSubmitting) {
-            const confirmLeave = confirm("You have an unsaved grievance draft. Are you sure you want to leave and view this ticket?");
-            if (!confirmLeave) return;
+        if (isFormDirty && !isFormSubmitting) {
+            if (confirm("You have an unsaved suggestion draft. Are you sure you want to leave and view this ticket?")) {
+                isFormDirty = false;
+                window.location.href = url;
+            }
+        } else {
+            window.location.href = url;
         }
-        window.location.href = url;
     }
 
     window.addEventListener('beforeunload', (e) => {
-        if (isFormDirty && !isSubmitting) {
+        if (isFormDirty && !isFormSubmitting) {
             e.preventDefault();
-            e.returnValue = 'You have unsaved changes in your grievance form. Are you sure you want to leave?';
+            e.returnValue = 'You have unsaved changes in your suggestion form. Are you sure you want to leave?';
             return e.returnValue;
         }
     });
@@ -382,35 +387,28 @@
             grievanceForm.reset();
         }
         isFormDirty = false;
-        isSubmitting = false;
+        isFormSubmitting = false;
 
-        const submitBtn = document.getElementById('submit-btn') || document.getElementById('submit-grievance-btn');
-        const submitBtnText = document.getElementById('submit-btn-text');
-        const submitBtnIcon = document.getElementById('submit-btn-icon');
-        const tracker = document.getElementById('progress-card') || document.getElementById('submitting-tracker');
-        const progressStatus = document.getElementById('progress-status');
-        const progressPercentage = document.getElementById('progress-percentage') || document.getElementById('tracker-percentage');
-        const progressBar = document.getElementById('progress-bar') || document.getElementById('tracker-progress-bar');
-
+        const submitBtn = document.getElementById('submit-grievance-btn');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-            if (submitBtnText && submitBtnIcon) {
-                submitBtnText.textContent = 'Submit Grievance';
-                submitBtnIcon.textContent = 'send';
-                submitBtnIcon.classList.remove('animate-spin');
-            } else {
-                submitBtn.innerHTML = `
-                    <span>Submit Grievance</span>
-                    <span class="material-symbols-outlined text-[20px]">send</span>
-                `;
-            }
+            submitBtn.innerHTML = `
+                <span>Submit Suggestion</span>
+                <span class="material-symbols-outlined text-[20px]">send</span>
+            `;
         }
 
-        if (tracker) tracker.classList.add('hidden');
+        const tracker = document.getElementById('submitting-tracker');
+        if (tracker) {
+            tracker.classList.add('hidden');
+        }
+
+        const progressBar = document.getElementById('tracker-progress-bar');
         if (progressBar) progressBar.style.width = '0%';
-        if (progressPercentage) progressPercentage.textContent = '0%';
-        if (progressStatus) progressStatus.textContent = 'Encrypting and saving grievance details...';
+
+        const percentage = document.getElementById('tracker-percentage');
+        if (percentage) percentage.textContent = '0%';
 
         const label = document.getElementById('file-upload-label');
         if (label) label.textContent = 'Upload attachment';
@@ -419,9 +417,9 @@
         if (dragDropText) dragDropText.style.display = 'inline';
     }
 
-    // Trigger state reset every time page is shown (including Back/Forward navigation)
     window.addEventListener('pageshow', (event) => {
         resetSubmitFormState();
     });
 </script>
 {% endblock %}
+

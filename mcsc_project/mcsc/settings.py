@@ -33,6 +33,11 @@ RENDER_EXTERNAL_HOSTNAME = config('RENDER_EXTERNAL_HOSTNAME', default='')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+_csrf_trusted = config('CSRF_TRUSTED_ORIGINS', default='')
+if _csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
+
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,6 +58,7 @@ INSTALLED_APPS = [
     'news',
     'events',
     'grievances',
+    'onam',
 ]
 
 MIDDLEWARE = [
@@ -175,6 +181,7 @@ if USE_SUPABASE_STORAGE and SUPABASE_URL and SUPABASE_ACCESS_KEY_ID and SUPABASE
     DEFAULT_FILE_STORAGE = 'core.storage.SupabaseS3Storage'
     AWS_ACCESS_KEY_ID = SUPABASE_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = SUPABASE_SECRET_ACCESS_KEY
+    # Supabase uses S3 compatible interface via endpoint
     AWS_S3_ENDPOINT_URL = f"{SUPABASE_URL}/storage/v1/s3"
     AWS_STORAGE_BUCKET_NAME = SUPABASE_STORAGE_BUCKET_NAME
     AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='ap-northeast-2')
@@ -229,7 +236,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 if not DEBUG:
-    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000  # 1 year
